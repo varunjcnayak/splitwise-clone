@@ -1,0 +1,5 @@
+{
+  "/groups/new/page": "app/groups/new/page.js",
+  "/groups/page": "app/groups/page.js",
+  "/page": "app/page.js"
+}
