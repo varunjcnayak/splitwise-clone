@@ -3,28 +3,50 @@
 import React, { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { motion } from 'framer-motion';
+
+const groupSchema = z.object({
+  name: z.string().min(1, 'Group name is required'),
+  description: z.string().optional(),
+});
+
+type GroupFormData = z.infer<typeof groupSchema>;
 
 export default function NewGroup() {
   const { data: session } = useSession();
   const router = useRouter();
-  const [groupName, setGroupName] = useState('');
-  const [description, setDescription] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<GroupFormData>({
+    resolver: zodResolver(groupSchema),
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
+  const onSubmit = async (data: GroupFormData) => {
     try {
-      // TODO: Implement group creation logic
-      console.log('Creating group:', { groupName, description });
-      
-      // Redirect to groups page after creation
+      setError(null);
+      const response = await fetch('/api/groups', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create group');
+      }
+
       router.push('/groups');
-    } catch (error) {
-      console.error('Error creating group:', error);
-    } finally {
-      setIsLoading(false);
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create group');
     }
   };
 
@@ -45,27 +67,36 @@ export default function NewGroup() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 py-12">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="min-h-screen bg-gray-100 py-12"
+    >
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white shadow sm:rounded-lg">
           <div className="px-4 py-5 sm:p-6">
             <h3 className="text-lg leading-6 font-medium text-gray-900">Create a new group</h3>
-            <form onSubmit={handleSubmit} className="mt-5 space-y-6">
+            {error && (
+              <div className="mt-2 text-sm text-red-600">
+                {error}
+              </div>
+            )}
+            <form onSubmit={handleSubmit(onSubmit)} className="mt-5 space-y-6">
               <div>
-                <label htmlFor="group-name" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                   Group Name
                 </label>
                 <div className="mt-1">
                   <input
+                    {...register('name')}
                     type="text"
-                    name="group-name"
-                    id="group-name"
-                    value={groupName}
-                    onChange={(e) => setGroupName(e.target.value)}
+                    id="name"
                     className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
                     placeholder="Enter group name"
-                    required
                   />
+                  {errors.name && (
+                    <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
+                  )}
                 </div>
               </div>
 
@@ -75,18 +106,19 @@ export default function NewGroup() {
                 </label>
                 <div className="mt-1">
                   <textarea
+                    {...register('description')}
                     id="description"
-                    name="description"
                     rows={3}
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
                     className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
                     placeholder="Enter group description"
                   />
+                  {errors.description && (
+                    <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>
+                  )}
                 </div>
               </div>
 
-              <div className="flex justify-end">
+              <div className="flex justify-end space-x-3">
                 <button
                   type="button"
                   onClick={() => router.back()}
@@ -96,16 +128,16 @@ export default function NewGroup() {
                 </button>
                 <button
                   type="submit"
-                  disabled={isLoading}
-                  className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                  disabled={isSubmitting}
+                  className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                 >
-                  {isLoading ? 'Creating...' : 'Create Group'}
+                  {isSubmitting ? 'Creating...' : 'Create Group'}
                 </button>
               </div>
             </form>
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 } 
