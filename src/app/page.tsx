@@ -1,91 +1,76 @@
 'use client';
 
 import React from 'react';
-import { useSession, signOut } from 'next-auth/react';
+import { motion } from 'framer-motion';
 import Link from 'next/link';
 
-export default function Home() {
-  const { data: session, status } = useSession();
-
-  if (status === 'loading') {
-    return <div>Loading...</div>;
-  }
-
-  if (!session) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Welcome to Splitwise Clone</h1>
-          <p className="text-gray-600 mb-8">Please sign in to continue</p>
+export default function Page() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-100 flex flex-col">
+      {/* Top nav */}
+      <div className="flex justify-between items-center px-6 py-4 shadow-sm bg-white">
+        <h1 className="text-2xl font-bold text-purple-700 tracking-wide">SplitBuddy</h1>
+        <div className="space-x-4">
           <Link
             href="/auth/signin"
-            className="inline-block bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700"
+            className="text-purple-600 font-medium hover:text-purple-800 transition"
           >
-            Sign In
+            Login
+          </Link>
+          <Link
+            href="/auth/signup"
+            className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition"
+          >
+            Sign Up
           </Link>
         </div>
       </div>
-    );
-  }
 
-  return (
-    <div className="min-h-screen bg-gray-100">
-      <nav className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex">
-              <div className="flex-shrink-0 flex items-center">
-                <h1 className="text-xl font-bold text-gray-900">Splitwise Clone</h1>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              {session?.user?.name && (
-                <span className="text-gray-700">Welcome, {session.user.name}</span>
-              )}
-              <button
-                onClick={() => signOut()}
-                className="text-gray-700 hover:text-gray-900"
-              >
-                Sign out
-              </button>
-            </div>
+      {/* Main Content */}
+      <div className="flex flex-grow items-center justify-center p-6">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+          className="w-full max-w-2xl bg-white rounded-2xl shadow-lg p-8 border border-gray-200"
+        >
+          <h2 className="text-2xl font-semibold text-gray-800 text-center mb-6">
+            Expense Sheet
+          </h2>
+
+          <div className="grid grid-cols-3 gap-4 text-sm font-medium text-gray-600 border-b pb-2 mb-4">
+            <div>Friend</div>
+            <div>Amount</div>
+            <div>Status</div>
           </div>
-        </div>
-      </nav>
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {/* Create New Group Card */}
+          {/* Dummy data rows */}
+          {['Alice', 'Bob', 'Charlie'].map((name, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 + idx * 0.1 }}
+              className="grid grid-cols-3 gap-4 text-gray-700 py-2 border-b"
+            >
+              <div>{name}</div>
+              <div>₹{(Math.random() * 1000).toFixed(2)}</div>
+              <div className={idx % 2 === 0 ? 'text-green-500' : 'text-red-500'}>
+                {idx % 2 === 0 ? 'Settled' : 'Pending'}
+              </div>
+            </motion.div>
+          ))}
+
+          <div className="text-center mt-6">
             <Link
               href="/groups/new"
-              className="block p-6 bg-white rounded-lg border border-gray-200 shadow-md hover:bg-gray-50"
+              className="inline-block mt-4 bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition"
             >
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center">
-                  <svg
-                    className="mx-auto h-12 w-12 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                    />
-                  </svg>
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">Create new group</h3>
-                  <p className="mt-1 text-sm text-gray-500">Start splitting expenses with friends</p>
-                </div>
-              </div>
+              + Create New Group
             </Link>
-
-            {/* Groups will be listed here */}
           </div>
-        </div>
-      </main>
+        </motion.div>
+      </div>
     </div>
   );
-} 
+}
